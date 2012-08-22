@@ -1,0 +1,7 @@
+## Interface: 50000
+## Title: TransmogSets
+## Notes: ---
+## Author: d87
+## SavedVariablesPerCharacter: TransmogSetsDB_Character
+embeds.xml
+TransmogSets.lua
