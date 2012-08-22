@@ -5,9 +5,15 @@ TransmogSets:SetScript("OnEvent", function(self, event, ...)
 end)
 TransmogSets:RegisterEvent("ADDON_LOADED")
 
-local print = function(...)
-    DEFAULT_CHAT_FRAME:AddMessage(table.concat({...}, " "))
-end
+
+local print = print
+-- local print = function(...)
+--     local tbl = {...}
+--     for k,v in pairs(tbl) do
+--         tbl[k] = tostring(v)
+--     end
+    -- DEFAULT_CHAT_FRAME:AddMessage(table.concat({...}, " "))
+-- end
 
 local Slots = {
     [1] = "HeadSlot",
@@ -22,6 +28,7 @@ local Slots = {
     [16] = "MainHandSlot",
     [17] = "SecondaryHandSlot",
 }
+local iSlots = { 1, 3, 15, 5, 9, 10, 6, 7, 8, 16, 17 }
 
 function TransmogSets.ADDON_LOADED(self,event,arg1)
     if arg1 ~= "TransmogSets" then return end
@@ -123,8 +130,10 @@ function TransmogSets.LoadSet(self, setName)
     local setName = setName or self.db.selected
     if not setName then return end
     local set = self.db.sets[setName]
-    for slotID, itemID in pairs(set) do
+    for slotID in pairs(Slots) do
         ClearTransmogrifySlot(slotID)
+    end
+    for slotID, itemID in pairs(set) do
         local isTransmogrified, canTransmogrify, cannotTransmogrifyReason,
             hasPending, hasUndo, srcItemID, texture = GetTransmogrifySlotInfo(slotID)
         if canTransmogrify then
@@ -132,6 +141,7 @@ function TransmogSets.LoadSet(self, setName)
                 if not isTransmogrified or srcItemID ~= itemID then
                     if self:PickupItemByID(itemID) then
                         ClickTransmogrifySlot(slotID);
+                        --CanTransmogrifyItemWithItem()
                         local cursorItem = GetCursorInfo();
                         if cursorItem == "item" then
                             ClearCursor()
@@ -143,7 +153,7 @@ function TransmogSets.LoadSet(self, setName)
                     end
                 end
             else
-                ClearTransmogrifySlot(slotID);
+                ClickTransmogrifySlot(slotID);
             end
         else
             local errorMsg = _G["TRANSMOGRIFY_INVALID_REASON"..cannotTransmogrifyReason];
@@ -391,7 +401,7 @@ function TransmogSets.Create( self )
     itemsgroup.labels = {}
     Frame.rpane:AddChild(itemsgroup)
 
-    for k,v in pairs(Slots) do
+    for _,k in pairs(iSlots) do
         local label = AceGUI:Create("Label")
         label:SetText('test')
         label:SetWidth(250)
