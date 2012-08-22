@@ -330,7 +330,7 @@ function TransmogSets.Create( self )
     local Frame = AceGUI:Create("Frame")
     Frame:SetTitle("TransmogSets")
     Frame:SetWidth(500)
-    Frame:SetHeight(470)
+    Frame:SetHeight(440)
     Frame:EnableResize(false)
     -- f:SetStatusText("Status Bar")
     Frame:SetLayout("Flow")
@@ -397,14 +397,15 @@ function TransmogSets.Create( self )
 
     local itemsgroup = AceGUI:Create("InlineGroup")
     itemsgroup:SetWidth(300)
-    itemsgroup:SetLayout("Flow")
+    itemsgroup:SetLayout("List")
     itemsgroup.labels = {}
     Frame.rpane:AddChild(itemsgroup)
 
     for _,k in pairs(iSlots) do
         local label = AceGUI:Create("Label")
         label:SetText('test')
-        label:SetWidth(250)
+        label:SetWidth(280)
+        label.label:SetWordWrap(false) 
         label:SetImage("Interface\\Icons\\spell_holy_resurrection")
         itemsgroup:AddChild(label)
         itemsgroup.labels[k] = label
