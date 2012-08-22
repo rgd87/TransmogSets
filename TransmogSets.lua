@@ -5,6 +5,10 @@ TransmogSets:SetScript("OnEvent", function(self, event, ...)
 end)
 TransmogSets:RegisterEvent("ADDON_LOADED")
 
+local print = function(...)
+    DEFAULT_CHAT_FRAME:AddMessage(table.concat({...}, " "))
+end
+
 local Slots = {
     [1] = "HeadSlot",
     [3] = "ShoulderSlot",
@@ -34,28 +38,12 @@ function TransmogSets.ADDON_LOADED(self,event,arg1)
     self:RegisterEvent("BANKFRAME_OPENED")
     self:RegisterEvent("BANKFRAME_CLOSED")
 
-    -- local f = CreateFrame("ScrollFrame", "TransmogSetsListFrame", UIParent, "HybridScrollFrameTemplate") 
-    -- f:SetBackdrop{
-    --     ["bgFile"] = "Interface\\DialogFrame\\UI-DialogBox-Background",
-    --     ["tileSize"] = 32,
-    --     ["edgeFile"] = "Interface\\DialogFrame\\UI-DialogBox-Border",
-    --     ["tile"] = 1,
-    --     ["edgeSize"] = 32,
-    --     ["insets"] = {
-    --         ["top"] = 8,
-    --         ["right"] = 8,
-    --         ["left"] = 8,
-    --         ["bottom"] = 8,
-    --     },
-    -- }
-    -- f:SetWidth(200)
-    -- f:SetHeight(360)
-    -- f:SetPoint("CENTER",0,0)
-
     self.frame = TransmogSets:Create()
     self:UpdateTree(self.frame.tree)
-    if self.db.selected then
+    if self.db.selected and self.db.sets[self.db.selected] then
         self.frame.tree:SelectByValue(self.db.selected)
+    else
+        self:UpdateRightPanel()
     end
 
     SLASH_TRANSMOGSETS1 = "/trs";
@@ -147,10 +135,11 @@ function TransmogSets.LoadSet(self, setName)
                         local cursorItem = GetCursorInfo();
                         if cursorItem == "item" then
                             ClearCursor()
-                            print(Slots[slotID], "Couldn't transmogrify this item")
+                            print(string.format("|cffd29f32[%s]|r %s",Slots[slotID], "|cffff8888Can't transmogrify this item|r"))
                         end
                     else
-                        print(Slots[slotID], "Item", itemID, "is missing")
+                        local name = GetItemInfo(itemID)
+                        print(string.format("|cffd29f32[%s]|r %s(#%d) is missing",Slots[slotID], name, itemID))
                     end
                 end
             else
@@ -158,7 +147,7 @@ function TransmogSets.LoadSet(self, setName)
             end
         else
             local errorMsg = _G["TRANSMOGRIFY_INVALID_REASON"..cannotTransmogrifyReason];
-            print(Slots[slotID], errorMsg)
+            print(string.format("|cffd29f32[%s]|r |cffff8888%s|r",Slots[slotID], errorMsg))
         end
     end
 end
@@ -176,7 +165,7 @@ function TransmogSets.PushBank(self, setName)
                 PickupContainerItem(sc,ss)
                 PickupContainerItem(dc,ds)
             else
-                print("No space left in bank")
+                print("|cffff8888No space left in bank|r")
             end
         end
     end
@@ -196,7 +185,7 @@ function TransmogSets.PullBank(self, setName)
                 PickupContainerItem(sc,ss)
                 PickupContainerItem(dc,ds)
             else
-                print("No space left in bags")
+                print("|cffff8888No space left in bags|r")
             end
         end
     end
@@ -224,42 +213,44 @@ function TransmogSets.DeleteSet(self, name)
         else
             self:UpdateRightPanel()
         end
+        self.db.selected = newset
     end
     self:UpdateTree()
 end
 
 
-TransmogSets.Commands = {
-    ["save"] = function(v)
-    end,
-    ["load"] = function(v)
-        TransmogSets:LoadSet(v)
-    end,
-    ["push"] = function(v)
-        TransmogSets:PushBank(v)
-    end,
-    ["pull"] = function(v)
-        TransmogSets:PullBank(v)
-    end,
-    ["list"] = function(v)
-        print("Transmogrification Sets:")
-        for name in pairs(TransmogSetsDB) do
-            print("    ",name)
-        end
-    end,
-}
+-- TransmogSets.Commands = {
+--     ["save"] = function(v)
+--     end,
+--     ["load"] = function(v)
+--         TransmogSets:LoadSet(v)
+--     end,
+--     ["push"] = function(v)
+--         TransmogSets:PushBank(v)
+--     end,
+--     ["pull"] = function(v)
+--         TransmogSets:PullBank(v)
+--     end,
+--     ["list"] = function(v)
+--         print("Transmogrification Sets:")
+--         for name in pairs(TransmogSetsDB) do
+--             print("    ",name)
+--         end
+--     end,
+-- }
 
 function TransmogSets.SlashCmd(msg)
-    k,v = string.match(msg, "([%w%+%-%=]+) ?(.*)")
-    if not k or k == "help" then 
-        print([[Usage:
-          |cff55ffff/trs save <set>|r
-          |cff55ff55/trs load <set>|r]]
-        )
-    end
-    if TransmogSets.Commands[k] then
-        TransmogSets.Commands[k](v)
-    end    
+    TransmogSets.frame:Show()
+    -- k,v = string.match(msg, "([%w%+%-%=]+) ?(.*)")
+    -- if not k or k == "help" then 
+    --     print([[Usage:
+    --       |cffd29f32/trs save <set>|r
+    --       |cff55ff55/trs load <set>|r]]
+    --     )
+    -- end
+    -- if TransmogSets.Commands[k] then
+    --     TransmogSets.Commands[k](v)
+    -- end    
 end
 
 function TransmogSets:UpdateTree()
@@ -269,10 +260,6 @@ function TransmogSets:UpdateTree()
     for name,set in pairs(sets) do
         local iconItemID = set[3] or select(2, next(set))
         local icon = GetItemIcon(iconItemID)
--- 
-        -- (iconItemID == false)
-                    -- and "Interface\\Icons\\INV_Enchant_EssenceCosmicGreater"
-                    -- or 
         table.insert(t, { value = name, text = name, icon = icon })
     end
     treegroup:SetTree(t)
@@ -282,9 +269,9 @@ function TransmogSets.UpdateRightPanel(self, group)
     if group then self.db.selected = group end
     local rpane = self.frame.rpane
     local set
-    if self.db.selected then
-        self.frame.tree:SelectByValue(self.db.selected)
-        set = self.db.sets[self.db.selected]
+    if self.db.selected and self.db.sets[self.db.selected]  then
+        -- self.frame.tree:SelectByValue(self.db.selected)
+        set = self.db.sets[self.db.selected] 
         self.frame.top.label:SetText(self.db.selected)
     else
         self.frame.top.label:SetText("NewSet")
@@ -312,6 +299,7 @@ end
 
 
 function TransmogSets.TRANSMOGRIFY_OPEN(self)
+    if not self.tfbutton then self.tfbutton = self:CreateButton() end
     self.frame.rpane.transmogbtn:SetDisabled(false)
 end
 function TransmogSets.TRANSMOGRIFY_CLOSE(self)
@@ -330,10 +318,10 @@ function TransmogSets.Create( self )
     local AceGUI = LibStub("AceGUI-3.0")
     -- Create a container frame
     local Frame = AceGUI:Create("Frame")
-    Frame:SetCallback("OnClose",function(widget) AceGUI:Release(widget) end)
     Frame:SetTitle("TransmogSets")
     Frame:SetWidth(500)
     Frame:SetHeight(470)
+    Frame:EnableResize(false)
     -- f:SetStatusText("Status Bar")
     Frame:SetLayout("Flow")
 
@@ -421,26 +409,22 @@ function TransmogSets.Create( self )
     Frame.rpane.deletebtn = btn4
 
 
-
-
-    -- local scrollcontainer = AceGUI:Create("InlineGroup") -- "InlineGroup" is also good
-    -- scrollcontainer:SetWidth(200)
-    -- scrollcontainer:SetFullHeight(true) -- probably?
-    -- scrollcontainer:SetLayout("Fill") -- important!
-    -- f:AddChild(scrollcontainer)
-
-    -- local scroll = AceGUI:Create("ScrollFrame")
-    -- scroll:SetLayout("Flow") -- probably?
-    -- scrollcontainer:AddChild(scroll)
-
-    -- -- Create a button
-    -- for i=1,30 do
-    -- local btn = AceGUI:Create("Button")
-    -- btn:SetWidth(170)
-    -- btn:SetText("Button !")
-    -- btn:SetCallback("OnClick", function() print("Click!") end)
-    -- -- -- Add the button to the container
-    -- tree:AddChild(btn)
+    Frame:Hide()
 
     return Frame
+end
+
+function TransmogSets.CreateButton(self)
+    btn = CreateFrame("Button","TransmogSetsButton", TransmogrifyFrame)
+    btn:SetPoint("TOPRIGHT", TransmogrifyFrame,"TOPRIGHT",-25,-40)
+    btn:SetFrameStrata("HIGH")
+
+    btn:SetWidth(25)
+    btn:SetHeight(25)
+    btn:SetNormalTexture("Interface\\Icons\\Spell_Holy_EmpowerChampion")
+    btn:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square","ADD")
+
+    btn:RegisterForClicks("LeftButtonUp","RightButtonUp")
+    btn:SetScript("OnClick",function(self) TransmogSets.frame:Show() end)
+    return btn
 end
