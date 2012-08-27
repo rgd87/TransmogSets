@@ -42,6 +42,8 @@ function TransmogSets.ADDON_LOADED(self,event,arg1)
 
     self:RegisterEvent("TRANSMOGRIFY_OPEN")
     self:RegisterEvent("TRANSMOGRIFY_CLOSE")
+    self:RegisterEvent("VOID_STORAGE_OPEN")
+    self:RegisterEvent("VOID_STORAGE_CLOSE")
     self:RegisterEvent("BANKFRAME_OPENED")
     self:RegisterEvent("BANKFRAME_CLOSED")
 
@@ -71,7 +73,7 @@ function TransmogSets.SaveCurrent(self)
     return t
 end
 
-do
+do -- bag/bank search functions
     local bag_containers = { 0 } --backpack
     for i=1, NUM_BAG_SLOTS do table.insert(bag_containers, i) end
     local bank_containers = { -1 } -- main bank space
@@ -113,6 +115,15 @@ do
         for k,v in pairs(free) do
             table.wipe(v)
         end
+    end
+end
+
+local VOID_DEPOSIT_MAX = 9;
+local VOID_WITHDRAW_MAX = 9;
+local VOID_STORAGE_MAX = 80;
+function TransmogSets.FindInVoid(self, itemID)
+    for slot=1, VOID_STORAGE_MAX do
+        if GetVoidItemInfo(slot) == itemID then return slot end
     end
 end
 
@@ -200,6 +211,51 @@ function TransmogSets.PullBank(self, setName)
         end
     end
     self:ClearFree()
+end
+
+
+function TransmogSets.PushVoid(self, setName)
+    local setName = setName or self.db.selected
+    if not setName then return end
+    local set = self.db.sets[setName]
+    VoidStorageFrame:UnregisterEvent("VOID_DEPOSIT_WARNING")
+    self:RegisterEvent("VOID_DEPOSIT_WARNING")
+    local slotIn = 1
+    for invSlot, itemID in pairs(set) do
+        local sc,ss = self:FindItemByID(itemID)
+        if sc then
+            if not GetVoidTransferDepositInfo(slotIn) then
+                PickupContainerItem(sc,ss)
+                ClickVoidTransferDepositSlot(slotIn)
+            end
+            if slotIn == VOID_DEPOSIT_MAX then break end
+            slotIn = slotIn + 1
+        end
+    end
+    VoidStorageFrame:RegisterEvent("VOID_DEPOSIT_WARNING")
+    self:UnregisterEvent("VOID_DEPOSIT_WARNING")
+end
+function TransmogSets.VOID_DEPOSIT_WARNING(self, event)
+    VoidStorage_UpdateTransferButton();
+end
+
+function TransmogSets.PullVoid(self, setName)
+    local setName = setName or self.db.selected
+    if not setName then return end
+    local set = self.db.sets[setName]
+
+    local slotOut = 1
+    for invSlot, itemID in pairs(set) do
+        local slotStorage = self:FindInVoid(itemID)
+        if slotStorage then
+            if not GetVoidTransferWithdrawalInfo(slotOut) then
+                ClickVoidStorageSlot(slotStorage)
+                ClickVoidTransferWithdrawalSlot(slotOut)
+            end
+            if slotOut == VOID_WITHDRAW_MAX then break end
+            slotOut = slotOut + 1
+        end
+    end
 end
 
 function TransmogSets.SaveSet(self)
@@ -301,28 +357,55 @@ function TransmogSets.UpdateRightPanel(self, group)
             local name, link, quality, _, _, _, _, _, _, texture = GetItemInfo(itemID) 
             label:SetImage(texture)
             label:SetText(name)
-            label:SetColor(GetItemQualityColor(quality))
+            label:SetColor(GetItemQualityColor(quality or 1))
         end
     end
 
 end
 
-
 function TransmogSets.TRANSMOGRIFY_OPEN(self)
-    if not self.tfbutton then self.tfbutton = self:CreateButton() end
+    if not self.tfbutton then self.tfbutton = self:CreateTransmogFrameButton() end
+    local btn = self.tfbutton
+    btn:SetParent(TransmogrifyFrame)
+    btn:ClearAllPoints()
+    btn:SetPoint("TOPRIGHT", TransmogrifyFrame,"TOPRIGHT",-25,-40)
     self.frame.rpane.transmogbtn:SetDisabled(false)
 end
 function TransmogSets.TRANSMOGRIFY_CLOSE(self)
     self.frame.rpane.transmogbtn:SetDisabled(true)
 end
+function TransmogSets.VOID_STORAGE_OPEN(self)
+    if not self.tfbutton then self.tfbutton = self:CreateTransmogFrameButton() end
+    local btn = self.tfbutton
+    btn:SetParent(VoidStorageFrame)
+    btn:ClearAllPoints()
+    btn:SetPoint("TOPRIGHT", VoidStorageFrame,"TOPRIGHT",-15,-30)
+    local pullbtn, pushbtn = self.frame.rpane.pullbtn, self.frame.rpane.pushbtn
+    pullbtn:SetCallback("OnClick", pullbtn.void_click)
+    pullbtn:SetCallback("OnEnter", pullbtn.void_enter)
+    pullbtn:SetDisabled(false)
+    pushbtn:SetCallback("OnClick", pushbtn.void_click)
+    pushbtn:SetCallback("OnEnter", pushbtn.void_enter)
+    pushbtn:SetDisabled(false)
+end
+function TransmogSets.VOID_STORAGE_CLOSE(self)
+    self.frame.rpane.pullbtn:SetDisabled(true)
+    self.frame.rpane.pushbtn:SetDisabled(true)
+end
 function TransmogSets.BANKFRAME_OPENED(self)
-    self.frame.rpane.pullbtn:SetDisabled(false)
-    self.frame.rpane.pushbtn:SetDisabled(false)
+    local pullbtn, pushbtn = self.frame.rpane.pullbtn, self.frame.rpane.pushbtn
+    pullbtn:SetCallback("OnClick", pullbtn.bank_click)
+    pullbtn:SetCallback("OnEnter", pullbtn.bank_enter)
+    pullbtn:SetDisabled(false)
+    pushbtn:SetCallback("OnClick", pushbtn.bank_click)
+    pushbtn:SetCallback("OnEnter", pushbtn.bank_enter)
+    pushbtn:SetDisabled(false)
 end
 function TransmogSets.BANKFRAME_CLOSED(self)
     self.frame.rpane.pullbtn:SetDisabled(true)
     self.frame.rpane.pushbtn:SetDisabled(true)
 end
+
 
 function TransmogSets.Create( self )
     local AceGUI = LibStub("AceGUI-3.0")
@@ -381,25 +464,29 @@ function TransmogSets.Create( self )
     Frame.rpane:AddChild(btn1)
     Frame.rpane.transmogbtn = btn1
 
-    local btn2 = AceGUI:Create("Button")
-    btn2:SetWidth(80)
-    btn2:SetText("Pull")
-    btn2:SetCallback("OnClick", function() TransmogSets:PullBank() end)
-    btn2:SetCallback("OnEnter", function() Frame:SetStatusText("Get set items from bank") end)
-    btn2:SetCallback("OnLeave", function() Frame:SetStatusText("") end)
-    btn2:SetDisabled(true)
-    Frame.rpane:AddChild(btn2)
-    Frame.rpane.pullbtn = btn2
+    local pullbtn = AceGUI:Create("Button")
+    pullbtn:SetWidth(80)
+    pullbtn:SetText("Pull")
+    pullbtn.void_click = function() TransmogSets:PullVoid() end
+    pullbtn.bank_click = function() TransmogSets:PullBank() end
+    pullbtn.void_enter = function() Frame:SetStatusText("Get set items to void storage") end
+    pullbtn.bank_enter = function() Frame:SetStatusText("Get set items to bank") end
+    pullbtn:SetCallback("OnLeave", function() Frame:SetStatusText("") end)
+    pullbtn:SetDisabled(true)
+    Frame.rpane:AddChild(pullbtn)
+    Frame.rpane.pullbtn = pullbtn
 
-    local btn3 = AceGUI:Create("Button")
-    btn3:SetWidth(80)
-    btn3:SetText("Push")
-    btn3:SetCallback("OnClick", function() TransmogSets:PushBank() end)
-    btn3:SetCallback("OnEnter", function() Frame:SetStatusText("Move set items to bank") end)
-    btn3:SetCallback("OnLeave", function() Frame:SetStatusText("") end)
-    btn3:SetDisabled(true)
-    Frame.rpane:AddChild(btn3)
-    Frame.rpane.pushbtn = btn3
+    local pushbtn = AceGUI:Create("Button")
+    pushbtn:SetWidth(80)
+    pushbtn:SetText("Push")
+    pushbtn.void_click = function() TransmogSets:PushVoid() end
+    pushbtn.bank_click = function() TransmogSets:PushBank() end
+    pushbtn.void_enter = function() Frame:SetStatusText("Move set items to void storage") end
+    pushbtn.bank_enter = function() Frame:SetStatusText("Move set items to bank") end
+    pushbtn:SetCallback("OnLeave", function() Frame:SetStatusText("") end)
+    pushbtn:SetDisabled(true)
+    Frame.rpane:AddChild(pushbtn)
+    Frame.rpane.pushbtn = pushbtn
 
     local itemsgroup = AceGUI:Create("InlineGroup")
     itemsgroup:SetWidth(300)
@@ -431,7 +518,7 @@ function TransmogSets.Create( self )
     return Frame
 end
 
-function TransmogSets.CreateButton(self)
+function TransmogSets.CreateTransmogFrameButton(self)
     btn = CreateFrame("Button","TransmogSetsButton", TransmogrifyFrame)
     btn:SetPoint("TOPRIGHT", TransmogrifyFrame,"TOPRIGHT",-25,-40)
     btn:SetFrameStrata("HIGH")
