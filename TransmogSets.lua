@@ -220,6 +220,8 @@ function TransmogSets.PushVoid(self, setName)
     local set = self.db.sets[setName]
     VoidStorageFrame:UnregisterEvent("VOID_DEPOSIT_WARNING")
     self:RegisterEvent("VOID_DEPOSIT_WARNING")
+    self:RegisterEvent("VOID_TRANSFER_DONE")
+    if self.vswarn then self.vswarn:Hide() end
     local slotIn = 1
     for invSlot, itemID in pairs(set) do
         local sc,ss = self:FindItemByID(itemID)
@@ -236,8 +238,15 @@ function TransmogSets.PushVoid(self, setName)
     self:UnregisterEvent("VOID_DEPOSIT_WARNING")
 end
 function TransmogSets.VOID_DEPOSIT_WARNING(self, event)
+    if not self.vswarn then self.vswarn = self:CreateWarningText() end
+    self.vswarn:Show()
     VoidStorage_UpdateTransferButton();
 end
+function TransmogSets.VOID_TRANSFER_DONE(self, event)
+    self:UnregisterEvent("VOID_TRANSFER_DONE")
+    if self.vswarn then self.vswarn:Hide() end
+end
+
 
 function TransmogSets.PullVoid(self, setName)
     local setName = setName or self.db.selected
@@ -531,4 +540,18 @@ function TransmogSets.CreateTransmogFrameButton(self)
     btn:RegisterForClicks("LeftButtonUp","RightButtonUp")
     btn:SetScript("OnClick",function(self) TransmogSets.frame:Show() end)
     return btn
+end
+
+function TransmogSets.CreateWarningText(self)
+    local f = CreateFrame("Frame", nil, VoidStorageFrame)
+    f:SetWidth(500)
+    f:SetHeight(20)
+    f:SetPoint("BOTTOMLEFT",VoidStorageFrame,"BOTTOMLEFT",35,17)
+    local label = f:CreateFontString(nil, "OVERLAY")
+    label:SetAllPoints(f)
+    label:SetJustifyH("LEFT")
+    label:SetFontObject("GameFontNormalSmall")
+    label:SetTextColor(1,0.6, 0)
+    label:SetText(VOID_STORAGE_DEPOSIT_CONFIRMATION)
+    return f
 end
