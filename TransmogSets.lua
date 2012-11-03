@@ -51,7 +51,11 @@ function TransmogSets.ADDON_LOADED(self,event,arg1)
     self:UpdateTree(self.frame.tree)
     if self.db.selected and self.db.sets[self.db.selected] then
         self.frame.tree:SelectByValue(self.db.selected)
+    elseif next(self.db.sets) then
+        self.db.selected = next(self.db.sets)
+        self.frame.tree:SelectByValue(self.db.selected)
     else
+        self.db.selected = nil
         self:UpdateRightPanel()
     end
 
@@ -450,11 +454,6 @@ function TransmogSets.Create( self )
 
 
     local treegroup = AceGUI:Create("TreeGroup") -- "InlineGroup" is also good
-    local t = {}
-    for i=1, 10 do
-        table.insert(t, { value = "shit"..i, text = "shit" ..i})
-    end
-    -- treegroup:SetTree(t)
     treegroup:SetFullWidth(true)
     treegroup:SetTreeWidth(150, false)
     treegroup:SetLayout("Flow")
