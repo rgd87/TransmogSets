@@ -381,7 +381,8 @@ function TransmogSets.TRANSMOGRIFY_OPEN(self)
     local btn = self.tfbutton
     btn:SetParent(TransmogrifyFrame)
     btn:ClearAllPoints()
-    btn:SetPoint("TOPRIGHT", TransmogrifyFrame,"TOPRIGHT",-25,-40)
+    btn:SetPoint("BOTTOMRIGHT", TransmogrifyFrame,"BOTTOMRIGHT",-25,40)
+    btn:Show()
     self.frame.rpane.transmogbtn:SetDisabled(false)
 end
 function TransmogSets.TRANSMOGRIFY_CLOSE(self)
@@ -393,6 +394,7 @@ function TransmogSets.VOID_STORAGE_OPEN(self)
     btn:SetParent(VoidStorageFrame)
     btn:ClearAllPoints()
     btn:SetPoint("TOPRIGHT", VoidStorageFrame,"TOPRIGHT",-15,-30)
+    btn:Show()
     local pullbtn, pushbtn = self.frame.rpane.pullbtn, self.frame.rpane.pushbtn
     pullbtn:SetCallback("OnClick", pullbtn.void_click)
     pullbtn:SetCallback("OnEnter", pullbtn.void_enter)
@@ -406,6 +408,12 @@ function TransmogSets.VOID_STORAGE_CLOSE(self)
     self.frame.rpane.pushbtn:SetDisabled(true)
 end
 function TransmogSets.BANKFRAME_OPENED(self)
+    if not self.tfbutton then self.tfbutton = self:CreateTransmogFrameButton() end
+    local btn = self.tfbutton
+    btn:SetParent(UIParent)
+    btn:ClearAllPoints()
+    btn:SetPoint("TOPRIGHT", UIParent,"TOPRIGHT",-175,-2)
+    btn:Show()
     local pullbtn, pushbtn = self.frame.rpane.pullbtn, self.frame.rpane.pushbtn
     pullbtn:SetCallback("OnClick", pullbtn.bank_click)
     pullbtn:SetCallback("OnEnter", pullbtn.bank_enter)
@@ -415,6 +423,8 @@ function TransmogSets.BANKFRAME_OPENED(self)
     pushbtn:SetDisabled(false)
 end
 function TransmogSets.BANKFRAME_CLOSED(self)
+    local btn = self.tfbutton
+    if btn then btn:Hide() end
     self.frame.rpane.pullbtn:SetDisabled(true)
     self.frame.rpane.pushbtn:SetDisabled(true)
 end
@@ -439,6 +449,7 @@ function TransmogSets.Create( self )
     Frame.top = topgroup
 
     local setname = AceGUI:Create("EditBox")
+    setname:SetWidth(240)
     setname:SetText("NewSet1")
     setname:DisableButton(true)
     topgroup:AddChild(setname)
@@ -529,7 +540,7 @@ end
 
 function TransmogSets.CreateTransmogFrameButton(self)
     btn = CreateFrame("Button","TransmogSetsButton", TransmogrifyFrame)
-    btn:SetPoint("TOPRIGHT", TransmogrifyFrame,"TOPRIGHT",-25,-40)
+    btn:SetPoint("TOPRIGHT", TransmogrifyFrame,"TOPRIGHT",-25,40)
     btn:SetFrameStrata("HIGH")
 
     btn:SetWidth(25)
@@ -538,7 +549,13 @@ function TransmogSets.CreateTransmogFrameButton(self)
     btn:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square","ADD")
 
     btn:RegisterForClicks("LeftButtonUp","RightButtonUp")
-    btn:SetScript("OnClick",function(self) TransmogSets.frame:Show() end)
+    btn:SetScript("OnClick",function(self)
+        if TransmogSets.frame:IsVisible() then
+            TransmogSets.frame:Hide()
+        else
+            TransmogSets.frame:Show()
+        end
+    end)
     return btn
 end
 
