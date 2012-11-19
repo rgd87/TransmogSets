@@ -58,7 +58,7 @@ function TransmogSets.ADDON_LOADED(self,event,arg1)
         self.db.selected = nil
         self:UpdateRightPanel()
     end
-
+    
     SLASH_TRANSMOGSETS1 = "/trs";
     SLASH_TRANSMOGSETS2 = "/transmogsets";
     SlashCmdList["TRANSMOGSETS"] = TransmogSets.SlashCmd
@@ -452,6 +452,14 @@ function TransmogSets.Create( self )
     setcreate:SetCallback("OnLeave", function() Frame:SetStatusText("") end)
     topgroup:AddChild(setcreate)
 
+    local btn4 = AceGUI:Create("Button")
+    btn4:SetWidth(100)
+    btn4:SetText("Delete")
+    btn4:SetCallback("OnClick", function() TransmogSets:DeleteSet() end)
+    topgroup:AddChild(btn4)
+    -- Frame.rpane:AddChild(btn4)
+    -- Frame.rpane.deletebtn = btn4
+
 
     local treegroup = AceGUI:Create("TreeGroup") -- "InlineGroup" is also good
     treegroup:SetFullWidth(true)
@@ -498,6 +506,7 @@ function TransmogSets.Create( self )
 
     local itemsgroup = AceGUI:Create("InlineGroup")
     itemsgroup:SetWidth(300)
+    itemsgroup:SetFullHeight(true)
     itemsgroup:SetLayout("List")
     itemsgroup.labels = {}
     Frame.rpane:AddChild(itemsgroup)
@@ -512,14 +521,6 @@ function TransmogSets.Create( self )
         itemsgroup.labels[k] = label
     end
     Frame.rpane.itemlabels = itemsgroup.labels
-
-    local btn4 = AceGUI:Create("Button")
-    btn4:SetWidth(90)
-    btn4:SetText("Delete")
-    btn4:SetCallback("OnClick", function() TransmogSets:DeleteSet() end)
-    Frame.rpane:AddChild(btn4)
-    Frame.rpane.deletebtn = btn4
-
 
     Frame:Hide()
 
