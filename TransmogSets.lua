@@ -379,19 +379,21 @@ end
 function TransmogSets.TRANSMOGRIFY_OPEN(self)
     if not self.tfbutton then self.tfbutton = self:CreateTransmogFrameButton() end
     local btn = self.tfbutton
-    btn:SetParent(TransmogrifyFrame)
+    -- btn:SetParent(TransmogrifyFrame)
     btn:ClearAllPoints()
     btn:SetPoint("BOTTOMRIGHT", TransmogrifyFrame,"BOTTOMRIGHT",-25,40)
     btn:Show()
     self.frame.rpane.transmogbtn:SetDisabled(false)
 end
 function TransmogSets.TRANSMOGRIFY_CLOSE(self)
+    local btn = self.tfbutton
+    if btn then btn:Hide() end
     self.frame.rpane.transmogbtn:SetDisabled(true)
 end
 function TransmogSets.VOID_STORAGE_OPEN(self)
     if not self.tfbutton then self.tfbutton = self:CreateTransmogFrameButton() end
     local btn = self.tfbutton
-    btn:SetParent(VoidStorageFrame)
+    -- btn:SetParent(VoidStorageFrame)
     btn:ClearAllPoints()
     btn:SetPoint("TOPRIGHT", VoidStorageFrame,"TOPRIGHT",-15,-30)
     btn:Show()
@@ -404,13 +406,15 @@ function TransmogSets.VOID_STORAGE_OPEN(self)
     pushbtn:SetDisabled(false)
 end
 function TransmogSets.VOID_STORAGE_CLOSE(self)
+    local btn = self.tfbutton
+    if btn then btn:Hide() end
     self.frame.rpane.pullbtn:SetDisabled(true)
     self.frame.rpane.pushbtn:SetDisabled(true)
 end
 function TransmogSets.BANKFRAME_OPENED(self)
     if not self.tfbutton then self.tfbutton = self:CreateTransmogFrameButton() end
     local btn = self.tfbutton
-    btn:SetParent(UIParent)
+    -- btn:SetParent(UIParent)
     btn:ClearAllPoints()
     btn:SetPoint("TOPRIGHT", UIParent,"TOPRIGHT",-175,-2)
     btn:Show()
@@ -539,13 +543,13 @@ function TransmogSets.Create( self )
 end
 
 function TransmogSets.CreateTransmogFrameButton(self)
-    btn = CreateFrame("Button","TransmogSetsButton", TransmogrifyFrame)
+    btn = CreateFrame("Button","TransmogSetsButton", UIParent)
     btn:SetPoint("TOPRIGHT", TransmogrifyFrame,"TOPRIGHT",-25,40)
-    btn:SetFrameStrata("HIGH")
+    btn:SetFrameStrata("TOOLTIP")
 
     btn:SetWidth(25)
     btn:SetHeight(25)
-    btn:SetNormalTexture("Interface\\Icons\\Spell_Holy_EmpowerChampion")
+    btn:SetNormalTexture("Interface\\Icons\\INV_Gizmo_02")
     btn:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square","ADD")
 
     btn:RegisterForClicks("LeftButtonUp","RightButtonUp")

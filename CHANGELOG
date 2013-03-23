@@ -1,0 +1,6 @@
+1.0.2:
+ - Fixed layout
+ - Button now appears while bank is opened. Next to minimap, in the topright corner.
+
+1.0.1:
+ - Itemlist panel should no longer be messed up when switching between characters
