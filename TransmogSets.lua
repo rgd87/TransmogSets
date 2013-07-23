@@ -151,7 +151,7 @@ function TransmogSets.LoadSet(self, setName)
     end
     for slotID, item in pairs(set) do
 		GetInventoryItemsForSlot(slotID, itemTable, "transmogrify")
-		local _, canTransmogrify, _, _, _, visibleItemID = GetTransmogrifySlotInfo(slotID)			
+		local isTransmogrified, canTransmogrify, cannotTransmogrifyReason, _, _, visibleItemID = GetTransmogrifySlotInfo(slotID)			
         if canTransmogrify and visibleItemID ~= item then
 			for location, itemID in pairs(itemTable) do
 				if itemID == item then
@@ -164,9 +164,9 @@ function TransmogSets.LoadSet(self, setName)
 					break
 				end
 			end
-        else
-            local errorMsg = _G["TRANSMOGRIFY_INVALID_REASON"..cannotTransmogrifyReason];
-            print(string.format("|cffd29f32[%s]|r |cffff8888%s|r",Slots[slotID], errorMsg))
+        -- else
+            -- local errorMsg = _G["TRANSMOGRIFY_INVALID_REASON"..cannotTransmogrifyReason];
+            -- print(string.format("|cffd29f32[%s]|r |cffff8888%s|r",Slots[slotID], cannotTransmogrifyReason))
         end
     end
 end
