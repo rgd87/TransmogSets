@@ -140,6 +140,7 @@ function TransmogSets.PickupItemByID(self, itemID, in_bank)
     return false
 end
 
+local itemTable = {}
 
 function TransmogSets.LoadSet(self, setName)
     local setName = setName or self.db.selected
@@ -148,28 +149,21 @@ function TransmogSets.LoadSet(self, setName)
     for slotID in pairs(Slots) do
         ClearTransmogrifySlot(slotID)
     end
-    for slotID, itemID in pairs(set) do
-        local isTransmogrified, canTransmogrify, cannotTransmogrifyReason,
-            hasPending, hasUndo, srcItemID, texture = GetTransmogrifySlotInfo(slotID)
-        if canTransmogrify then
-            if itemID then
-                if not isTransmogrified or srcItemID ~= itemID then
-                    if self:PickupItemByID(itemID) then
-                        ClickTransmogrifySlot(slotID);
-                        --CanTransmogrifyItemWithItem()
-                        local cursorItem = GetCursorInfo();
-                        if cursorItem == "item" then
-                            ClearCursor()
-                            print(string.format("|cffd29f32[%s]|r %s",Slots[slotID], "|cffff8888Can't transmogrify this item|r"))
-                        end
-                    else
-                        local name = GetItemInfo(itemID)
-                        print(string.format("|cffd29f32[%s]|r %s(#%d) is missing",Slots[slotID], name, itemID))
-                    end
-                end
-            else
-                ClickTransmogrifySlot(slotID);
-            end
+    for slotID, item in pairs(set) do
+		GetInventoryItemsForSlot(slotID, itemTable, "transmogrify")
+		local _, canTransmogrify, _, _, _, visibleItemID = GetTransmogrifySlotInfo(slotID)			
+        if canTransmogrify and visibleItemID ~= item then
+			for location, itemID in pairs(itemTable) do
+				if itemID == item then
+						local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location)
+						if voidStorage then
+							UseVoidItemForTransmogrify(slot, slotID)
+						else
+							UseItemForTransmogrify(bag, slot, slotID)
+						end
+					break
+				end
+			end
         else
             local errorMsg = _G["TRANSMOGRIFY_INVALID_REASON"..cannotTransmogrifyReason];
             print(string.format("|cffd29f32[%s]|r |cffff8888%s|r",Slots[slotID], errorMsg))
