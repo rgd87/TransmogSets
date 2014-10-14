@@ -155,9 +155,9 @@ function TransmogSets.LoadSet(self, setName)
         if canTransmogrify and visibleItemID ~= item then
 			for location, itemID in pairs(itemTable) do
 				if itemID == item then
-						local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location)
+						local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location)
 						if voidStorage then
-							UseVoidItemForTransmogrify(slot, slotID)
+							UseVoidItemForTransmogrify(tab, voidSlot, slotID)
 						else
 							UseItemForTransmogrify(bag, slot, slotID)
 						end
