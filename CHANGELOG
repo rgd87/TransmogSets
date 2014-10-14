@@ -1,3 +1,10 @@
+1.4.0:
+ - WoD Update
+ - Void Storage tabs support
+
+1.2.0:
+ - 5.3 Void Storage support
+
 1.0.2:
  - Fixed layout
  - Button now appears while bank is opened. Next to minimap, in the topright corner.
