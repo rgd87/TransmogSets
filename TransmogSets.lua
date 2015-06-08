@@ -329,8 +329,12 @@ end
 function TransmogSets:UpdateTree()
     local sets = TransmogSetsDB.sets
     local treegroup = self.frame.tree
+    local s = {}
     local t = {}
-    for name,set in pairs(sets) do
+    for name in pairs(sets) do table.insert(s, name) end
+    table.sort(s)
+    for i,name in ipairs(s) do
+        local set = sets[name]
         local iconItemID = set[3] or select(2, next(set))
         local icon = GetItemIcon(iconItemID)
         table.insert(t, { value = name, text = name, icon = icon })
@@ -433,7 +437,7 @@ function TransmogSets.Create( self )
     -- Create a container frame
     local Frame = AceGUI:Create("Frame")
     Frame:SetTitle("TransmogSets")
-    Frame:SetWidth(500)
+    Frame:SetWidth(600)
     Frame:SetHeight(440)
     Frame:EnableResize(false)
     -- f:SetStatusText("Status Bar")
@@ -447,7 +451,7 @@ function TransmogSets.Create( self )
     Frame.top = topgroup
 
     local setname = AceGUI:Create("EditBox")
-    setname:SetWidth(240)
+    setname:SetWidth(340)
     setname:SetText("NewSet1")
     setname:DisableButton(true)
     topgroup:AddChild(setname)
@@ -472,7 +476,7 @@ function TransmogSets.Create( self )
 
     local treegroup = AceGUI:Create("TreeGroup") -- "InlineGroup" is also good
     treegroup:SetFullWidth(true)
-    treegroup:SetTreeWidth(150, false)
+    treegroup:SetTreeWidth(250, false)
     treegroup:SetLayout("Flow")
     treegroup:SetFullHeight(true) -- probably?
     treegroup:SetCallback("OnGroupSelected", function(self, event, group) TransmogSets:UpdateRightPanel(group) end)
